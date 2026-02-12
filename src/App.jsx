@@ -3,16 +3,18 @@ import {
   Navigate,
   RouterProvider,
 } from "react-router-dom";
-import Dashboard from "./Component/Dashboard";
+
 import Register from "./Pages/Register";
 import Login from "./Pages/Login";
 import { ToastContainer } from "react-toastify";
+import { AuthGuard } from "./auth/AuthGuard";
+import Dashboard from "./Pages/DashBoard";
 const DefultRouter = () => {
   const data = JSON.parse(localStorage.getItem("blog_rdata"));
   if (data) {
-    <Navigate to="/login" replace />;
+  return  <Navigate to="/dashboard" replace />;
   } else {
-    <Navigate to="/register" replace />;
+   return <Navigate to="/login" replace />;
   }
 };
 function App() {
@@ -23,21 +25,33 @@ function App() {
     },
     {
       path: "/register",
-      element: <Register></Register>,
+      element: (
+        <AuthGuard required={false}>
+          <Register />
+        </AuthGuard>
+      ),
     },
     {
       path: "/login",
-      element: <Login></Login>,
+      element: (
+        <AuthGuard required={false}>
+          <Login />
+        </AuthGuard>
+      ),
     },
     {
       path: "/dashboard",
-      element: <Dashboard />,
+      element: (
+        <AuthGuard required={true}>
+          <Dashboard />
+        </AuthGuard>
+      ),
     },
   ]);
 
   return (
     <>
-      return <RouterProvider router={route} />
+      <RouterProvider router={route} />
       <ToastContainer
         position="top-right"
         autoClose={1000}
