@@ -8,13 +8,17 @@ import Register from "./Pages/Register";
 import Login from "./Pages/Login";
 import { ToastContainer } from "react-toastify";
 import { AuthGuard } from "./auth/AuthGuard";
-import Dashboard from "./Pages/DashBoard";
+
+import CreatePost from "./Pages/CreatePost";
+import Dashboard from "./Pages/Dashboard";
+import { PostDetails } from "./Pages/PostDetails";
+import { Analystic } from "./Pages/Analystics";
 const DefultRouter = () => {
   const data = JSON.parse(localStorage.getItem("blog_rdata"));
   if (data) {
-  return  <Navigate to="/dashboard" replace />;
+    return <Navigate to="/dashboard" replace />;
   } else {
-   return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace />;
   }
 };
 function App() {
@@ -43,7 +47,40 @@ function App() {
       path: "/dashboard",
       element: (
         <AuthGuard required={true}>
-          <Dashboard />
+          <Dashboard/>
+        </AuthGuard>
+      ),
+    },
+    {
+      path: "/create-post",
+      element: (
+        <AuthGuard required={true}>
+          <CreatePost />
+        </AuthGuard>
+      ),
+    },
+    {
+      path: "/edit-post/:id",
+      element: (
+        <AuthGuard>
+          <CreatePost />
+        </AuthGuard>
+      ),
+    },
+
+      {
+      path: "/analytics",
+      element: (
+        <AuthGuard required={true}>
+          <Analystic/>
+        </AuthGuard>
+      ),
+    },
+    {
+      path: "/post-details/:id",
+      element: (
+        <AuthGuard required={true}>
+          <PostDetails />
         </AuthGuard>
       ),
     },
