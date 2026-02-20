@@ -9,24 +9,71 @@ import {
   Tooltip,
   XAxis,
   Pie,
+  YAxis,
 } from "recharts";
 import Navbar from "../Component/Navbar";
-import "./Analystics.css"
+import "./Analystics.css";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const Analystic = () => {
-  const chartData = [
-    { name: "Admin", posts: 5 },
-    { name: "User", posts: 3 },
-    { name: "Test", posts: 4 },
-    { name: "Demo", posts: 2 },
-  ];
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 5;
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentPosts = tasks.slice(indexOfFirstPost, indexOfLastPost);
+  const totalPages = Math.ceil(tasks.length / postsPerPage);
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  const header = [
-    'ID','Aythor','Date','Title'
-  ];
+  const navigate = useNavigate();
 
+  const handleEdit = (id) => {
+    navigate(`/edit-post/${id}`);
+  };
+  const handleDelete = async (id) => {
+    await fetch(`http://localhost:3000/posts/${id}`, {
+      method: "DELETE",
+    });
+
+    setTasks(tasks.filter((task) => task.id !== id));
+  };
+
+  const authorStats = tasks.reduce((acc, tasks) => {
+    const author = tasks.auther || "Unknown";
+    acc[author] = (acc[author] || 0) + 1;
+    return acc;
+  }, {});
+
+  const chartData = Object.keys(authorStats).map((auther) => ({
+    name: auther,
+    tasks: authorStats[auther],
+  }));
+
+  // const chartData = [
+  //   { name: "Admin", posts: 5 },
+  //   { name: "User", posts: 3 },
+  //   { name: "Test", posts: 4 },
+  //   { name: "Demo", posts: 2 },
+  // ];
+
+  const header = ["ID", "Title", "Auther", "Date", "Actions"];
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/posts");
+      const data = await response.json();
+      setTasks(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    fetchData();
+  }, []);
   return (
     <div className="analytics-page">
       <Navbar />
@@ -44,10 +91,11 @@ export const Analystic = () => {
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis />
+                  <XAxis dataKey="name" />
+                  <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="posts" fill="#8884d8" name="Number of Posts" />
+                  <Bar dataKey="tasks" fill="#8884d8" name="Number of Posts" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -61,10 +109,13 @@ export const Analystic = () => {
                     data={chartData}
                     cx="50%"
                     cy="50%"
-                    outerRedius={80}
+                    outerRadius={80}
                     fill="#8884d8"
-                    dataKey="posts"
-                    lable
+                    dataKey="tasks"
+                    label={({ name, percent }) =>
+                      `${name} ${(percent * 100).toFixed(0)}%`
+                    }
+                    labelLine={false}
                   >
                     {chartData.map((entry, index) => (
                       <Cell
@@ -83,43 +134,74 @@ export const Analystic = () => {
           <h3>All Posts</h3>
           <div className="table-wrapper">
             <table className="analytics-table">
-
               <thead>
                 <tr>
-                    {header.map((header,index)=>(<th>{header}</th>))}
+                  {header.map((header, index) => (
+                    <th>{header}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <th>1</th>
-                  <th>React Basics</th>
-                  <th>Admin</th>
-                  <th>16/02/2026</th>
-                </tr>
+                {currentPosts.map((task) => (
+                  <tr key={task.id}>
+                    <td>{task.id}</td>
+                    <td>{task.title}</td>
+                    <td>{task.auther}</td>
 
-                <tr>
-                  <th>2</th>
-                  <th>Unederstanding Hooks</th>
-                  <th>user</th>
-                  <th>15/02/2026</th>
-                </tr>
+                    <td>
+                      {new Date(
+                        tasks.createdAt || Date.now(),
+                      ).toLocaleDateString()}
+                    </td>
+                    <td className="action-buttons">
+                      <button
+                        className="edit-btn"
+                        onClick={() => handleEdit(task.id)}
+                        title="Edit"
+                      >
+                        ✏️
+                      </button>
 
-                <tr>
-                  <th>3</th>
-                  <th>JavaScript ES6</th>
-                  <th>Test</th>
-                  <th>14/02/2026</th>
-                </tr>
+                      <button
+                        className="delete-btn"
+                        onClick={() => handleDelete(task.id)}
+                        title="Delete"
+                      >
+                        🗑️
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
 
+          {/* static pagination */}
           <div className="pagination">
-            <button className="page-btn">Previous</button>
-            <button className="page-btn active">1</button>
-            <button className="page-btn">2</button>
-            <button className="page-btn">3</button>
-            <button className="page-btn">Next</button>
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="page-btn"
+            >
+              Previous
+            </button>
+
+            {[...Array(totalPages).keys()].map((number) => (
+              <button
+                key={number + 1}
+                onClick={() => paginate(number + 1)}
+                className={`page-btn ${currentPage === number + 1 ? "active" : ""}`}
+              >
+                {number + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === Math.ceil(tasks.length / postsPerPage)}
+              className="page-btn "
+            >
+              Next
+            </button>
           </div>
         </div>
       </main>

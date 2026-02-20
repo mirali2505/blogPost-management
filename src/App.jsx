@@ -13,6 +13,7 @@ import CreatePost from "./Pages/CreatePost";
 import Dashboard from "./Pages/Dashboard";
 import { PostDetails } from "./Pages/PostDetails";
 import { Analystic } from "./Pages/Analystics";
+import Favorites from "./Pages/Favorites";
 const DefultRouter = () => {
   const data = JSON.parse(localStorage.getItem("blog_rdata"));
   if (data) {
@@ -62,7 +63,7 @@ function App() {
     {
       path: "/edit-post/:id",
       element: (
-        <AuthGuard>
+        <AuthGuard required={true}>
           <CreatePost />
         </AuthGuard>
       ),
@@ -77,10 +78,19 @@ function App() {
       ),
     },
     {
-      path: "/post-details/:id",
+      path: "/postDetails/:id",
       element: (
         <AuthGuard required={true}>
           <PostDetails />
+        </AuthGuard>
+      ),
+    },
+
+    {
+      path: "/favorites",
+      element: (
+        <AuthGuard required={true}>
+          <Favorites/>
         </AuthGuard>
       ),
     },

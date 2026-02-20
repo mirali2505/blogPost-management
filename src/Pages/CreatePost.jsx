@@ -96,6 +96,23 @@ function CreatePost() {
     }
   };
 
+  const handleClearForm = () => {
+    setData({
+      title: "",
+      description: "",
+      auther: autherName?.name || "",
+      imageurl: "",
+      imageType: "url",
+    });
+
+    setImagePreview(null);
+    setError({});
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handlefileTypeChange = (type) => {
     setData((prev) => ({ ...prev, imageType: type }));
     if (type === "url") {
@@ -284,7 +301,7 @@ function CreatePost() {
                 Publish Post
               </button>
 
-              <button type="button" className="cancel-btn">
+              <button type="button" className="cancel-btn" onClick={handleClearForm}>
                 Clear Form
               </button>
             </div>
